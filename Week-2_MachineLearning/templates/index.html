@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <title>IPL Win Predictor</title>
+</head>
+<body>
+    <div class="container">
+        <h1>IPL Win Predictor</h1>
+        <div class="form-group">
+            <label for="batting_team">Select the batting team</label>
+            <select id="batting_team"></select>
+        </div>
+        <div class="form-group">
+            <label for="bowling_team">Select the bowling team</label>
+            <select id="bowling_team"></select>
+        </div>
+        <div class="form-group">
+            <label for="city">Select host city</label>
+            <select id="city"></select>
+        </div>
+        <div class="form-group">
+            <label for="target">Target</label>
+            <input type="number" id="target" placeholder="Enter target score">
+        </div>
+        <div class="form-group">
+            <label for="score">Score</label>
+            <input type="number" id="score" placeholder="Enter current score">
+        </div>
+        <div class="form-group">
+            <label for="overs">Overs completed</label>
+            <input type="number" id="overs" min="0" max="19" step="0.1" placeholder="Enter overs completed">
+        </div>
+        <div class="form-group">
+            <label for="wickets">Wickets out</label>
+            <input type="number" id="wickets" min="0" max="9" placeholder="Enter wickets out">
+        </div>
+        <button id="predictBtn">Predict Probability</button>
+        <div id="result"></div>
+        <div id="error" style="color: red;"></div> <!-- Error message area -->
+        
+        <!-- Button to navigate to visualizations page -->
+        <div style="margin-top: 20px; text-align: center;">
+            <a href="/visualizations" style="text-decoration: none;">
+                <button style="padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                    View Visualizations
+                </button>
+            </a>
+        </div>
+    </div>
+    
+    <script>
+        const teams = {{ teams | tojson | safe }};
+        const cities = {{ cities | tojson | safe }};
+    
+        const battingTeamSelect = document.getElementById('batting_team');
+        const bowlingTeamSelect = document.getElementById('bowling_team');
+        const citySelect = document.getElementById('city');
+        const wicketsInput = document.getElementById('wickets');
+        const oversInput = document.getElementById('overs');
+    
+        teams.forEach(team => {
+            const option = new Option(team, team);
+            battingTeamSelect.add(option);
+            bowlingTeamSelect.add(option.cloneNode(true));
+        });
+    
+        cities.forEach(city => {
+            const option = new Option(city, city);
+            citySelect.add(option);
+        });
+
+        // Validate wickets input
+        wicketsInput.addEventListener('input', function() {
+            let value = parseInt(wicketsInput.value, 10);
+            if (value < 0 || value > 9 || isNaN(value)) {
+                if (value < 0) {
+                    wicketsInput.value = 0; // Reset to 0 if less than 0
+                } else if (value > 9) {
+                    wicketsInput.value = 9; // Reset to 9 if more than 9
+                } else {
+                    wicketsInput.value = ''; // Clear the input if it's not a number
+                }
+            }
+        });
+
+        // Validate overs input
+        oversInput.addEventListener('input', function() {
+            let value = parseFloat(oversInput.value);
+            if (value < 0 || value > 19) {
+                if (value < 0) {
+                    oversInput.value = 0; // Reset to 0 if less than 0
+                } else {
+                    oversInput.value = 19; // Reset to 19 if more than 19
+                }
+            }
+        });
+    
+        document.getElementById('predictBtn').addEventListener('click', async function() {
+            const batting_team = battingTeamSelect.value;
+            const bowling_team = bowlingTeamSelect.value;
+
+            // Check if batting and bowling teams are the same
+            if (batting_team === bowling_team) {
+                document.getElementById('error').innerText = "Batting team and Bowling team cannot be the same!";
+                return; // Stop the execution if teams are the same
+            } else {
+                document.getElementById('error').innerText = ""; // Clear error message
+            }
+
+            const city = citySelect.value;
+            const target = document.getElementById('target').value;
+            const score = document.getElementById('score').value;
+            const overs = document.getElementById('overs').value;
+            const wickets = document.getElementById('wickets').value;
+    
+            const response = await fetch('/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    batting_team,
+                    bowling_team,
+                    city,
+                    target: parseInt(target),
+                    score: parseInt(score),
+                    overs: parseFloat(overs),
+                    wickets: parseInt(wickets)
+                })
+            });
+    
+            const result = await response.json();
+            document.getElementById('result').innerHTML = 
+                `<h2>${batting_team} Win Probability: ${result.win_probability}%</h2>
+                 <h2>${bowling_team} Win Probability: ${result.loss_probability}%</h2>`;
+        });
+    </script>
+</body>
+</html>

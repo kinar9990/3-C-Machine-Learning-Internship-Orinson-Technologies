@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <title>Model Visualizations</title>
+    <style>
+        .visualization img {
+            max-width: 100%;  /* Ensures the image doesn't exceed the container's width */
+            height: auto;      /* Maintains aspect ratio */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Model Performance Visualizations</h1>
+        <div class="visualization">
+            <h2>Confusion Matrix</h2>
+            <img src="{{ url_for('static', filename='visualization/confusion_matrix.png') }}" alt="Confusion Matrix">
+        </div>
+        <div class="visualization">
+            <h2>ROC Curve</h2>
+            <img src="{{ url_for('static', filename='visualization/roc_curve.png') }}" alt="ROC Curve">
+        </div>
+        <a href="/">
+            <button style="padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                Back to Predictor
+            </button>
+        </a>
+    </div>
+</body>
+</html>
